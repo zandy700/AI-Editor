@@ -23,7 +23,7 @@ def export(tl, out_dir):
         raise SystemExit("CapCut export needs: pip install pyJianYingDraft>=0.3")
 
     us = lambda s: round(s * 1_000_000)
-    root = Path(out_dir) if out_dir else Path(DEFAULT_ROOT.get(sys.platform, "capcut_drafts")).expanduser()
+    root = Path(out_dir or DEFAULT_ROOT.get(sys.platform, "capcut_drafts")).expanduser()
     root.mkdir(parents=True, exist_ok=True)
     script = draft.DraftFolder(str(root)).create_draft(tl.name, tl.width, tl.height, tl.fps, allow_replace=True)
 
