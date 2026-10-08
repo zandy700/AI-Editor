@@ -1,0 +1,10 @@
+[project]
+name = "editor"
+version = "0.1.0"
+description = "Script a video edit in Python once, export it to Final Cut, Resolve, Premiere, Kdenlive, Shotcut, Blender or CapCut."
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+narrate = ["edge-tts"]
+capcut = ["pyJianYingDraft>=0.3"]
