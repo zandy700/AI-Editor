@@ -18,12 +18,68 @@ export(tl, "fcp", "out")                                    # -> out/demo.fcpxml
 
 ## Contents
 
-- [Requirements](#requirements) · [Install](#install) · [Try it in two minutes](#try-it-in-two-minutes)
-- [How it works](#how-it-works) · [Timeline reference](#timeline-reference)
+- [What it can do](#what-it-can-do) · [How it works](#how-it-works) · [Using it with an AI agent](#using-it-with-an-ai-agent)
+- [Requirements](#requirements) · [Install](#install) · [Try it in two minutes](#try-it-in-two-minutes) · [Timeline reference](#timeline-reference)
 - [Exporting](#exporting) · [Opening the result in each editor](#opening-the-result-in-each-editor)
 - [Voiceover and subtitles](#voiceover-and-subtitles) · [Click zoom](#click-zoom) · [Saved timelines (JSON)](#saved-timelines-json)
 - [Feature support](#feature-support) · [How well it's tested](#how-well-its-tested) · [Limitations](#limitations)
 - [Development](#development) · [License](#license)
+
+## What it can do
+
+**Editing**
+- Cut and trim clips from any video file, and play them one after another
+- Stack clips on extra video tracks as overlays (logos, picture-in-picture, watermarks)
+- Add audio on as many lanes as you need (music, voiceover, sound effects)
+- Use still images (png, jpg, bmp, tif, webp) as clips
+- Change speed (slow motion or fast forward)
+- Change a clip's opacity and volume
+- Fade picture and sound in and out
+- Dissolve (crossfade) from one clip into the next
+- Add titles with position, size, colour and a fade
+- Zoom in and out with keyframes, including automatic zooms around click times in screen recordings
+- Set the project's resolution and frame rate
+
+**Automation**
+- Generate a spoken voiceover from a script, with subtitles timed exactly to the speech (English and Chinese)
+- Export titles as an `.srt` subtitle file
+- Save and load a whole edit as JSON, so a script, another program or an AI agent can write it
+- Export from the command line or from Python
+
+**Export targets**: Final Cut Pro, DaVinci Resolve, Premiere Pro, Kdenlive, Shotcut, Blender and CapCut. Every feature above is supported by every target (one caveat for CapCut audio, see [Feature support](#feature-support)).
+
+**Rendering without an editor**: Kdenlive/Shotcut projects render with `melt`, Blender projects render headless, and Resolve can queue a render from the generated script.
+
+## How it works
+
+`AI Editor` is a library, not an app. You describe an edit as a `Timeline`, and an exporter writes a project file that your editor opens. Your footage is never changed. The project file only says which parts of which files to play, where, and with what effects.
+
+```
+ footage + a description of the edit
+          │
+          ▼
+   script, JSON, or an AI agent writes the Timeline
+          │
+          ▼
+   Timeline  ──►  exporter  ──►  project file  ──►  open it in your editor, finish and render
+```
+
+Nothing in it looks at your footage or decides what to cut. **You (or your AI agent) decide the edit; this project turns that decision into a real project file for the editor you use.**
+
+## Using it with an AI agent
+
+Out of the box this is **not** a chat app: there's no drag-and-drop window, and it doesn't analyse video on its own. But because the whole edit is a few lines of Python or a JSON file, any AI coding agent (Claude Code, Codex, Cursor and similar) can drive it. The workflow looks like this:
+
+1. **Open your agent in this project's folder** (or any folder with your footage and this project installed) and tell it what you want, for example:
+   > "Use AI Editor (read the README). Take the clips in `~/footage`, cut a 30-second highlight with a title at the start, background music from `song.mp3` at low volume, a dissolve between clips, and export it for Premiere."
+2. **The agent looks at your footage with its own tools.** It can read file lengths with `ffprobe`, pull still frames with ffmpeg to see what's in them, or transcribe speech with a tool such as Whisper. This part comes from the agent, not from this project.
+3. **The agent writes the edit**, either a short Python script using `Timeline` or a `timeline.json`.
+4. **The agent runs the export** (`export(tl, "premiere", "out")` or `python -m editor export ...`).
+5. **You open the file in your editor** and review, adjust and render as usual.
+
+How good step 2 is depends on the agent and which tools it has. The agent can only cut on what it can see or hear, so for best results give it a transcript or a note of what's in each clip.
+
+Not built yet, but it would make this smoother: a ready-made agent instruction file for Claude Code, and helpers that transcribe a video and detect scene changes so the agent doesn't need to assemble those itself.
 
 ## Requirements
 
@@ -70,23 +126,6 @@ for path in export(tl, "fcp", "out"):               # or "premiere", "resolve", 
 ```
 
 This writes `out/demo.fcpxml`. To preview it without any editor, export to `kdenlive` and render with `melt` (see [below](#kdenlive-and-shotcut)).
-
-## How it works
-
-```
- your script / JSON / LLM
-          │
-          ▼
-   Timeline (editor-neutral)        clips, titles, times in seconds
-          │
-          ├── fcp, resolve ──► FCPXML 1.9
-          ├── premiere ──────► FCP7 XML (xmeml v4) + .srt
-          ├── kdenlive, shotcut ► MLT XML
-          ├── blender ───────► a Python script Blender runs
-          └── capcut ────────► a CapCut draft folder
-```
-
-Editing is just placing segments on tracks. A **clip** says "play seconds `src`…`src+dur` of this file at timeline position `start`". Your media files are never modified or copied; the project files point at them by absolute path, so keep the originals where they are (or re-link in the editor if you move them).
 
 ## Timeline reference
 
