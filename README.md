@@ -16,6 +16,28 @@ tl.add_title("Opening scene", start=1, dur=3, fade=0.5)
 export(tl, "fcp", "out")                                    # -> out/demo.fcpxml, import it in Final Cut
 ```
 
+## Supported editors
+
+Projects are generated on any OS. You only need the editor itself to open the result.
+
+| Editor | Output | Status |
+| --- | --- | --- |
+| Final Cut Pro | `.fcpxml` | Supported, not opened in the app yet |
+| DaVinci Resolve | `.fcpxml` plus an optional import/render script | Supported, not opened in the app yet |
+| Premiere Pro | `.xml` plus `.srt` for titles | Supported, not opened in the app yet |
+| Kdenlive / Shotcut | `.mlt` | Supported, **rendered and measured** with `melt` |
+| Blender | `.py` script that builds the edit | Supported, **rendered and measured** in Blender 5.2 |
+| CapCut | draft folder | Supported, not opened in the app yet |
+| iMovie, Filmora | none | Not supported: they can't import an editable timeline |
+
+## What it can't do
+
+- **Not an editor.** It builds the timeline; previewing, polishing and the final render happen in your editor.
+- **Doesn't watch your footage.** It never decides what to cut. You or your AI agent do.
+- **No effects, filters or colour grading.** Each editor has its own, so only the crossfade is mapped across.
+- **Writes new projects only.** It can't read or modify an existing editor project.
+- **Absolute media paths.** If you move your footage, re-link it in the editor.
+
 ## Contents
 
 - [What it can do](#what-it-can-do) · [How it works](#how-it-works) · [Using it with an AI agent](#using-it-with-an-ai-agent)
@@ -80,6 +102,18 @@ Out of the box this is **not** a chat app: there's no drag-and-drop window, and 
 How good step 2 is depends on the agent and which tools it has. The agent can only cut on what it can see or hear, so for best results give it a transcript or a note of what's in each clip.
 
 Not built yet, but it would make this smoother: a ready-made agent instruction file for Claude Code, and helpers that transcribe a video and detect scene changes so the agent doesn't need to assemble those itself.
+
+### Things to try saying
+
+> "Cut `~/footage/trip.mp4` down to a 30-second highlight with a title at the start, and export it for Premiere."
+
+> "Put `song.mp3` under these clips at low volume, fade it out at the end, and dissolve between clips."
+
+> "Write a short voiceover about autumn coffee, add subtitles, use these three clips as the pictures, and export for Final Cut."
+
+> "I recorded my screen with clicks at these times. Zoom in on each click and export for DaVinci Resolve."
+
+> "Make the same edit for Kdenlive and Blender so I can render it without opening anything."
 
 ## Requirements
 
@@ -372,6 +406,58 @@ tests/
 
 To add an editor: write `editor/export/<name>.py` with `SUPPORTS = set(FEATURES)` and `export(timeline, out_dir) -> list[Path]`, register it in `editor/export/__init__.py`, and add a test against `tests/features.py::full_timeline`.
 
+## FAQ
+
+1. **I can't see the new project in my editor.**
+   Import the generated file (File > Import in Final Cut, Resolve and Premiere; open it in Kdenlive and Shotcut). For CapCut, restart the app after writing the draft folder.
+
+2. **Footage shows as missing.**
+   Project files use absolute paths. Re-link the media in the editor if you moved it.
+
+3. **Something looks wrong after import.**
+   [Open an issue](https://github.com/zandy700/AI-Editor/issues) with the editor and version, a screenshot and the timeline `.json`.
+
 ## License
 
 [MIT](LICENSE)
+
+---
+
+## Inspiration and credits
+
+This project was inspired by [**jianying-editor-skill**](https://github.com/luoluoluo22/jianying-editor-skill), an AI skill that builds video edits for JianYing from plain-language requests. Its idea of letting an AI agent write the timeline is what AI Editor carries over to other editors. No code was copied. Thank you to the people who built it:
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/luoluoluo22">
+        <img src="https://github.com/luoluoluo22.png" width="80px;" alt="luoluoluo22"/><br />
+        <sub><b>luoluoluo22</b></sub>
+      </a><br />
+      <sub>Project author / Maintainer</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/twodogegg">
+        <img src="https://github.com/twodogegg.png" width="80px;" alt="twodogegg"/><br />
+        <sub><b>twodogegg</b></sub>
+      </a><br />
+      <sub>macOS compatibility / ffprobe fallback / unit tests</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/shaozheliu">
+        <img src="https://github.com/shaozheliu.png" width="80px;" alt="shaozheliu"/><br />
+        <sub><b>shaozheliu</b></sub>
+      </a><br />
+      <sub>Missing-media fix / self-contained assets</sub>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Maxinsomnia">
+        <img src="https://github.com/Maxinsomnia.png" width="80px;" alt="Maxinsomnia"/><br />
+        <sub><b>Maxinsomnia</b></sub>
+      </a><br />
+      <sub>macOS 5.9+ execution support</sub>
+    </td>
+  </tr>
+</table>
+
+The optional CapCut export uses [**pyJianYingDraft**](https://github.com/GuanYixuan/pyJianYingDraft) by [GuanYixuan](https://github.com/GuanYixuan) (Apache-2.0), installed as a separate dependency.
